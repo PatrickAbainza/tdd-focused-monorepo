@@ -165,10 +165,10 @@ Here's a breakdown of what each dependent task does:
 
 ### 3. Copydetect (HTML)
 
-- **Label:** `"Copydetect (HTML)"`
-- **Command:** `mkdir -p analysis_results && uv run copydetect -t src --noise-thresh 10 --guarantee-thresh 15 --extensions py -O analysis_results/copydetect_report.html`
+- **Label:** `"Copydetect (JSON)"`
+- **Command:** `mkdir -p analysis_results && uv run copydetect --noise-thresh 20 --guarantee-thresh 5 -s . -n 3 -O analysis_results/copydetect_report.html`
 - **Tool:** [Copydetect](https://github.com/blingenf K/copydetect)
-- **Purpose:** Detects duplicated code segments within the Python source directory (`src`). It analyzes Python files (`.py`) with a minimum matching character length of 10 (`--noise-thresh`) and a guaranteed detection threshold of 15 (`--guarantee-thresh`).
+- **Purpose:** Detects duplicated code segments within the entire project (`.`). It analyzes all supported files with a noise threshold of 20 tokens (`--noise-thresh`) and a guarantee threshold of 5 tokens (`--guarantee-thresh`). The `-n 3` flag limits the number of matches per file to 3.
 - **Output:** Generates an HTML report (`copydetect_report.html`) detailing the code duplication found. This report is saved in the `templates/python_uv/analysis_results/` directory.
 
 ### 4. Pydeps (JSON)

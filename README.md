@@ -96,8 +96,8 @@ This repository utilizes a range of modern tools within its templates:
 - **Linting/Formatting:** `ruff` (Extremely fast linter and formatter)
 - **Static Analysis:**
   - `radon` (Code complexity metrics)
-  - `copydetect` (Code duplication detection)
   - `pydeps` (Dependency graph generation)
+  - `copydetect` (Code duplication detection)
 - **Security:** `pip-audit` (Checks for known vulnerabilities in dependencies)
 - **Pre-commit Hooks:** `pre-commit` (Framework for managing git hooks)
 - **Containerization:** `Docker`
