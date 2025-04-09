@@ -131,12 +131,43 @@ Dependency security scanning is integrated using `pip-audit`:
 
 This template includes tools for static code analysis to help maintain code quality, identify potential issues, and understand code structure:
 
-- **Ruff:** A fast Python linter and formatter (already configured).
+- **Ruff:** A fast Python linter and formatter. It checks for style errors, potential bugs, and enforces code standards.
+
+  - **Purpose:** Enforce code style, identify potential bugs, improve code readability.
+  - **How to Run:**
+    - Individual file: `ruff check <file>`
+    - Entire project: `ruff check .`
+  - **Output:** Errors and warnings are printed to the console. For structured output, use the `Python Analysis: Ruff (JSON)` task.
+  - **Output File:** `analysis_results/ruff_results.json` (JSON format)
+  - **Documentation:** [Ruff Documentation](https://docs.astral.sh/ruff/)
+
 - **Radon:** Calculates various code metrics, including:
-  - Cyclomatic Complexity (`cc`): Measures the complexity of functions/methods.
-  - Maintainability Index (`mi`): A score indicating ease of maintenance.
-- **Copydetect:** Detects duplicated or copied code blocks, which can indicate areas for refactoring.
+
+  - **Cyclomatic Complexity (`cc`):** Measures the complexity of functions/methods. Higher values indicate more complex code that may be harder to understand and test.
+    - **Purpose:** Identify complex code that may need refactoring.
+    - **How to Run:** `radon cc . -a -s` (shows average and detailed complexity)
+    - **Output:** Complexity scores are printed to the console. For structured output, use the `Python Analysis: Radon CC (JSON)` task.
+    - **Output File:** `analysis_results/radon_cc_results.json` (JSON format)
+  - **Maintainability Index (`mi`):** A score indicating ease of maintenance. Higher values indicate more maintainable code.
+    - **Purpose:** Assess the maintainability of the codebase.
+    - **How to Run:** `radon mi . -s` (shows the maintainability index)
+    - **Output:** Maintainability index is printed to the console.
+  - **Documentation:** [Radon Documentation](https://radon.readthedocs.io/en/latest/)
+
+- **Copydetect:** Detects duplicated or copied code blocks, which can indicate areas for refactoring or potential copyright issues.
+
+  - **Purpose:** Identify code duplication.
+  - **How to Run:** `copydetect .`
+  - **Output:** A summary of duplicated code is printed to the console. For a detailed report, use the `Python Analysis: Copydetect (HTML)` task.
+  - **Output File:** `analysis_results/copydetect_report.html` (HTML report)
+  - **Documentation:** [Copydetect Documentation](https://github.com/jwbargsten/copydetect)
+
 - **Pydeps:** Analyzes import statements to generate dependency graphs, helping visualize module relationships.
+  - **Purpose:** Visualize module dependencies and identify potential circular dependencies.
+  - **How to Run:** `pydeps --output analysis_results/pydeps_output.svg`
+  - **Output:** A dependency graph is generated as an SVG file. For structured output, use the `Python Analysis: Pydeps (JSON)` task.
+  - **Output File:** `analysis_results/pydeps_results.json` (JSON format)
+  - **Documentation:** [Pydeps Documentation](https://pydeps.readthedocs.io/en/latest/)
 
 ### VS Code Tasks for Analysis
 

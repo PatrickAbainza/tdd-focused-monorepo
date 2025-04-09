@@ -1,1 +1,1 @@
-{"src/calculator.py": [{"type": "function", "rank": "A", "endline": 13, "name": "add", "complexity": 1, "lineno": 11, "col_offset": 0, "closures": []}]}
+{"src/calculator.py": [{"type": "function", "rank": "A", "complexity": 1, "name": "add", "endline": 11, "col_offset": 0, "lineno": 9, "closures": []}, {"type": "function", "rank": "A", "complexity": 1, "name": "subtract", "endline": 16, "col_offset": 0, "lineno": 14, "closures": []}]}

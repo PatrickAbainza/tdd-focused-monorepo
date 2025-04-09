@@ -8,7 +8,7 @@ This file demonstrates basic pytest conventions:
 """
 
 # Import the function to be tested from the source module
-from src.calculator import add
+from src.calculator import add, subtract
 
 
 # Define a test function for the 'add' functionality.
@@ -21,3 +21,8 @@ def test_add():
     assert add(-1, 1) == 0
     assert add(0, 0) == 0
     assert add(-5, -5) == -10
+
+
+def test_subtract():
+    """Tests the subtract function."""
+    assert subtract(5, 2) == 3

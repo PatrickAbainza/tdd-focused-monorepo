@@ -1,18 +1,1 @@
-{
-    "calculator.py": {
-        "bacon": 0,
-        "imports": [
-            "math"
-        ],
-        "name": "calculator.py",
-        "path": null
-    },
-    "math": {
-        "bacon": 1,
-        "imported_by": [
-            "calculator.py"
-        ],
-        "name": "math",
-        "path": null
-    }
-}
+{}
