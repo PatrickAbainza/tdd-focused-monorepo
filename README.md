@@ -164,6 +164,7 @@ A root-level `Makefile` simplifies common development tasks across both template
   - Pre-commit hooks configured in root `.pre-commit-config.yaml`.
   - `Dockerfile` for containerization.
 - **Details:** See [Python Template README](templates/python-uv/README.md).
+- **Analysis Reports:** Static analysis reports (e.g., Copydetect, Pydeps, Radon) are generated in the `templates/python_uv/analysis_results/` directory.
 
 ### Node.js (`templates/nodejs-vitest/`)
 

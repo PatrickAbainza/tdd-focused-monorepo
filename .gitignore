@@ -1,3 +1,6 @@
 # Project specific
 *.log
 .env*
+templates/python_uv/analysis_results/
+**/*.html
+**/*.json

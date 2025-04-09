@@ -8,3 +8,6 @@ wheels/
 
 # Virtual environments
 .venv
+templates/python_uv/analysis_results/
+**/*.html
+**/*.json
