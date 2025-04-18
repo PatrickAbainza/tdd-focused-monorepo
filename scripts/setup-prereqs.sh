@@ -2,9 +2,9 @@
 set -e
 set -o pipefail
 
-# --- tdd-macos-setup: Prerequisites ---
+# --- Cross-Platform Development Environment Setup ---
 
-# This script checks for and installs necessary tools for a TDD environment on macOS.
+# This script installs necessary development tools across different OS platforms.
 
 echo "Starting prerequisites setup..."
 
@@ -13,24 +13,76 @@ command_exists() {
     command -v "$1" &>/dev/null
 }
 
-# Function to check and install a Homebrew package
-install_brew_package() {
+# Function to detect OS
+detect_os() {
+    if [ -f /etc/os-release ]; then
+        # Linux
+        . /etc/os-release
+        OS_TYPE="linux"
+        OS_NAME="$NAME"
+    elif [ "$(uname)" == "Darwin" ]; then
+        # macOS
+        OS_TYPE="macos"
+        OS_NAME="macOS"
+    else
+        echo "Unsupported operating system"
+        exit 1
+    fi
+}
+
+# Function to detect package manager
+detect_package_manager() {
+    if command_exists apt; then
+        PKG_MANAGER="apt"
+        PKG_INSTALL="sudo apt install -y"
+        # Update package list for apt
+        sudo apt update
+        # Fix potential GPG ownership issues
+        if [ -d "$HOME/.gnupg" ]; then
+            echo "Fixing GPG directory ownership..."
+            sudo chown -R $(whoami) "$HOME/.gnupg/"
+        fi
+    elif command_exists dnf; then
+        PKG_MANAGER="dnf"
+        PKG_INSTALL="sudo dnf install -y"
+    elif command_exists pacman; then
+        PKG_MANAGER="pacman"
+        PKG_INSTALL="sudo pacman -S --noconfirm"
+        # Update package list for pacman
+        sudo pacman -Sy
+    elif command_exists brew; then
+        PKG_MANAGER="brew"
+        PKG_INSTALL="brew install"
+        # Update brew
+        brew update
+    else
+        echo "No supported package manager found"
+        exit 1
+    fi
+}
+
+# Function to install system package
+install_package() {
     local package_name="$1"
-    local command_name="${2:-$1}" # Optional: command name might differ from package name
+    local command_name="${2:-$1}"
 
     echo "Checking for $package_name..."
     if ! command_exists "$command_name"; then
         echo "Installing $package_name..."
-        if brew install "$package_name"; then
+        if sudo $PKG_INSTALL "$package_name"; then
             echo "$package_name installed successfully."
         else
-            echo "ERROR: Failed to install $package_name. Please check Homebrew output."
+            echo "ERROR: Failed to install $package_name. Please check package manager output."
             exit 1
         fi
-    else
-        echo "$package_name is already installed."
     fi
 
+    verify_command "$command_name"
+}
+
+# Function to verify command installation
+verify_command() {
+    local command_name="$1"
     echo "Verifying $command_name installation..."
     if command_exists "$command_name"; then
         echo "$command_name found: $(command -v "$command_name")"
@@ -38,112 +90,118 @@ install_brew_package() {
         echo "ERROR: $command_name verification failed after installation attempt."
         exit 1
     fi
-    echo "---" # Separator
+    echo "---"
 }
 
-# Function to check and install a Homebrew Cask package
-install_brew_cask() {
-    local cask_name="$1"
-    local app_name="$2" # e.g., "Visual Studio Code"
-    local app_path="/Applications/$app_name.app"
+# Function to install Python packages using uv
+install_python_packages() {
+    echo "Setting up Python development tools..."
 
-    echo "Checking for $app_name..."
-    if [ ! -d "$app_path" ]; then
-        echo "Installing $cask_name..."
-        if brew install --cask "$cask_name"; then
-            echo "$cask_name installed successfully."
-        else
-            echo "ERROR: Failed to install $cask_name. Please check Homebrew output."
-            exit 1
-        fi
-    else
-        echo "$app_name is already installed."
+    # Create virtual environment
+    if ! command_exists uv; then
+        echo "Creating virtual environment..."
+        python3 -m venv .venv
+        source .venv/bin/activate
+        echo "Virtual environment activated."
     fi
 
-    echo "Verifying $app_name installation..."
-    if [ -d "$app_path" ]; then
-        echo "$app_name found at $app_path"
-    else
-        echo "ERROR: $app_name verification failed after installation attempt."
-        exit 1
-    fi
-    echo "---" # Separator
+    # Install Python packages using uv
+    echo "Installing Python development tools..."
+    uv pip install \
+        pytest \
+        pytest-cov \
+        ruff \
+        radon \
+        copydetect \
+        pydeps \
+        pip-audit \
+        pre-commit
+
+    # Verify key tool installations
+    for tool in pytest ruff pip-audit pre-commit; do
+        verify_command "$tool"
+    done
 }
 
-# 1. Check/Install Homebrew
-echo "Checking for Homebrew..."
-if ! command_exists brew; then
-    echo "Installing Homebrew..."
-    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-    # Add brew to PATH for the current script execution (needed on Apple Silicon)
-    if [[ "$(uname -m)" == "arm64" ]]; then
-        # Attempt to add to common shell profiles if they exist
-        if [ -f "$HOME/.zshrc" ]; then
-            echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >>"$HOME/.zshrc"
-            echo "Added Homebrew setup to ~/.zshrc"
-        fi
-        if [ -f "$HOME/.bash_profile" ]; then
-            echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >>"$HOME/.bash_profile"
-            echo "Added Homebrew setup to ~/.bash_profile"
-        fi
-        # Evaluate for the current script session
-        eval "$(/opt/homebrew/bin/brew shellenv)"
-        echo "Configured Homebrew environment for this session (Apple Silicon)."
-    fi
-    echo "Verifying Homebrew installation..."
-    if command_exists brew; then
-        echo "Homebrew installed successfully: $(command -v brew)"
-    else
-        echo "ERROR: Homebrew installation failed. Please check the output above and ensure it's added to your PATH."
-        exit 1
+# Function to install Node.js packages
+install_node_packages() {
+    echo "Setting up Node.js development tools..."
+
+    # Install global npm packages
+    echo "Installing Node.js development tools..."
+    sudo npm install -g \
+        vitest \
+        eslint \
+        prettier \
+        husky \
+        lint-staged \
+        jscpd \
+        dependency-cruiser
+
+    # Verify key tool installations
+    for tool in vitest eslint prettier; do
+        verify_command "$tool"
+    done
+}
+
+# Main installation process
+echo "Detecting system configuration..."
+detect_os
+echo "Detected OS: $OS_NAME"
+
+detect_package_manager
+echo "Using package manager: $PKG_MANAGER"
+echo "---"
+
+# Install base development tools
+echo "Installing base development tools..."
+install_package "git"
+install_package "python3" "python3"
+install_package "curl"
+
+# Install Node.js based on OS
+if [ "$OS_TYPE" = "linux" ]; then
+    if [ "$PKG_MANAGER" = "apt" ]; then
+        # For Debian/Ubuntu, use NodeSource
+        curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
+        install_package "nodejs" "node"
+    elif [ "$PKG_MANAGER" = "dnf" ]; then
+        # For Fedora, use NodeSource
+        curl -fsSL https://rpm.nodesource.com/setup_lts.x | sudo bash -
+        install_package "nodejs" "node"
+    elif [ "$PKG_MANAGER" = "pacman" ]; then
+        # For Arch Linux
+        install_package "nodejs" "node"
     fi
 else
-    echo "Homebrew is already installed: $(command -v brew)"
-    echo "Updating Homebrew..."
-    brew update
+    # For macOS
+    install_package "node"
 fi
-echo "---" # Separator
 
-# 2. Check/Install Git
-install_brew_package "git"
+# Install development tools
+install_python_packages
+install_node_packages
 
-# 3. Check/Install Python
-install_brew_package "python" "python3" # Command is python3
+echo "Prerequisites setup completed successfully."
 
-# 4. Check/Install Node.js
-install_brew_package "node"
-
-# 5. Check/Install uv (Python package manager)
-install_brew_package "uv"
-
-# 6. Check/Install Visual Studio Code
-install_brew_cask "visual-studio-code" "Visual Studio Code"
-
-# 7. Check 'code' command in PATH
-echo "Checking for 'code' command in PATH..."
-if ! command_exists code; then
-    echo "----------------------------------------------------------------------"
-    echo "WARNING: The 'code' command is not available in your PATH."
-    echo "         This command allows you to open files and folders in VS Code"
-    echo "         directly from the terminal."
-    echo ""
-    echo "To install it:"
-    echo "1. Open Visual Studio Code."
-    echo "2. Open the Command Palette (Cmd+Shift+P or F1)."
-    echo "3. Type 'Shell Command: Install 'code' command in PATH' and select it."
-    echo "4. You MUST restart your terminal or source your profile file"
-    echo "   (e.g., 'source ~/.zshrc' or 'source ~/.bash_profile')"
-    echo "   for the change to take effect."
-    echo ""
-    echo "See VS Code documentation for more details:"
-    echo "https://code.visualstudio.com/docs/setup/mac#_launching-from-the-command-line"
-    echo "----------------------------------------------------------------------"
-else
-    echo "'code' command found: $(command -v code)"
+# Optional: Clean up unused packages (Applies only if using apt)
+if [ "$PKG_MANAGER" = "apt" ]; then
+    read -p "System detected unused packages. Run 'sudo apt autoremove' to clean them up? (y/N): " cleanup_choice
+    if [[ "$cleanup_choice" =~ ^[Yy]$ ]]; then
+        echo "Running package cleanup..."
+        sudo apt autoremove -y
+    fi
 fi
-echo "---" # Separator
+echo "Next steps:"
+echo "1. Run 'make setup' to install project dependencies"
+echo "2. Run 'uv run pre-commit install' to set up Git hooks"
+echo "3. For Node.js template, run 'cd templates/nodejs-vitest && npx husky install'"
 
-echo "Prerequisites setup script finished successfully."
-echo "IMPORTANT: If VS Code was installed or updated, please reload the VS Code window"
-echo "           (Cmd+Shift+P or F1 -> 'Developer: Reload Window')"
-echo "           to ensure all changes and extensions are recognized."
+# Optional: Upgrade packages (Applies only if using apt)
+if [ "$PKG_MANAGER" = "apt" ]; then
+    read -p "System detected upgradable packages. Run 'sudo apt upgrade' now? (y/N): " upgrade_choice
+    if [[ "$upgrade_choice" =~ ^[Yy]$ ]]; then
+        echo "Running system upgrade..."
+        sudo apt upgrade -y
+    fi
+fi
