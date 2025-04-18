@@ -120,8 +120,8 @@
     {
       "label": "Python Analysis: Pydeps (JSON)",
       "type": "shell",
-      "command": "mkdir -p analysis_results && uv run python -m pydeps src/calculator.py --show-deps --pylib > analysis_results/pydeps_results.json",
-      "options": { "cwd": "${workspaceFolder}/templates/python_uv" },
+      "command": "uv run python scripts/analyze_deps.py --search-pattern \"templates/python_uv/src\" --output-file analysis_results/pydeps_results.json",
+      "options": { "cwd": "${workspaceFolder}" },
       "problemMatcher": [],
       "presentation": { "reveal": "silent", "panel": "new", "clear": true }
     },
